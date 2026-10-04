@@ -36,7 +36,7 @@ output_csv <- "grt_sites_COMPLETE_100_percent.csv"
 output_map <- "grt_sites_COMPLETE_map.png"
 
 # GOOGLE API KEY (paste your key here)
-GOOGLE_API_KEY <- "AIzaSyDJdtiTMa1mCu8ZVLiFzqq757Uiz9ksurM"  # ← PASTE YOUR KEY HERE
+GOOGLE_API_KEY <- ""  # ← PASTE YOUR KEY HERE
 
 # API ENDPOINTS
 postcode_api <- "https://api.postcodes.io/postcodes"
