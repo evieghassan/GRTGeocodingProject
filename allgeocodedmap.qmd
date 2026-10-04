@@ -1,0 +1,329 @@
+---
+title: "allgeocodedmap#"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+# R Script to Read and Plot a Shapefile using sf and ggplot2
+
+# 1. Load Required Libraries
+# 'sf' is the modern standard for handling spatial vector data (shapefiles, etc.)
+# 'ggplot2' is used for the visualization
+library(sf)
+library(ggplot2)
+# You may need to install these packages if you haven't already:
+# install.packages(c("sf", "ggplot2"))
+
+
+# 2. Define the Shapefile Path
+# IMPORTANT: This assumes 'grt_sites_COMPLETE_100_percent.shp' is in your current R working directory.
+# If it's located elsewhere, replace the filename below with the full path,
+# e.g., shp_file <- "C:/Users/YourName/Documents/gis_data/grt_sites_COMPLETE_100_percent.shp"
+shp_file <- "grt_sites_COMPLETE_100_percent.shp"
+
+
+# 3. Read the Shapefile
+# The st_read function automatically loads all necessary files (.shp, .dbf, .shx, etc.)
+# associated with the shapefile.
+if (file.exists(shp_file)) {
+  cat("Reading shapefile:", shp_file, "\n")
+  shp_data <- st_read(shp_file)
+  
+  # Optional: View the structure and coordinate reference system (CRS)
+  # print(head(shp_data))
+  # print(st_crs(shp_data))
+  
+  # 4. Create the ggplot Map
+  # geom_sf is a special geometry that understands how to plot simple feature objects
+  # and automatically handles coordinate transformations.
+  p <- ggplot(data = shp_data) +
+    # Your output confirms the Geometry type is POINT. We adjust the aesthetics.
+    # We use shape=21 (a filled circle) so 'fill' colors the interior and 'color' colors the border.
+    geom_sf(
+      shape = 21,              # Use shape 21 (circle that accepts fill and color)
+      fill = "darkred",        # Interior color of the points
+      color = "white",         # Border color of the points (for contrast)
+      size = 3,                # Size of points (3 is a good default)
+      alpha = 0.8              # Transparency
+    ) +
+    # 5. Customize the Plot
+    theme_minimal() + # Use a clean, minimal theme
+    labs(
+      title = "Geographic Plot of GRT Sites (100% Complete)",
+      subtitle = paste("Number of Features:", nrow(shp_data)),
+      caption = paste("CRS:", st_crs(shp_data)$input),
+      x = "Longitude",
+      y = "Latitude"
+    ) +
+    # Ensure aspect ratio is correct for geographic maps
+    coord_sf()
+  
+  # 6. Display the Plot
+  print(p)
+  
+} else {
+  # Handle the case where the file is not found
+  cat("ERROR: Shapefile not found at the specified path:\n")
+  cat(shp_file, "\n")
+  cat("Please ensure all shapefile components (.shp, .dbf, .shx, etc.) are in the directory \n")
+  cat("or update the 'shp_file' variable with the correct full path.\n")
+}
+
+# Further Customization Ideas:
+# 1. To map a variable (e.g., column 'VALUE'):
+#    geom_sf(aes(fill = VALUE, color = NA)) +
+#    scale_fill_viridis_c() # Use a nice color scale
+# 2. To add background geometry (like country/state borders) for context, you could use 
+#    the 'rnaturalearth' package and add its features with another geom_sf layer.
+# 3. Since your data is POINTS, try mapping one of the 13 attributes to color or size:
+#    geom_sf(aes(fill = your_column_name, color = your_column_name), shape = 21, size = 3) + 
+#    scale_fill_discrete() # or scale_fill_viridis_c() if the column is numeric
+
+```
+
+```{r}
+# R Script to Read and Plot a Shapefile using sf and ggplot2
+
+# 1. Load Required Libraries
+# Function to check for and install/load packages
+load_packages <- function(pkg){
+  # Check if package is installed
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    cat(paste0("Package '", pkg, "' not found. Attempting to install...\n"))
+    # Install the package
+    install.packages(pkg, dependencies = TRUE)
+  }
+  # Load the package
+  library(pkg, character.only = TRUE)
+}
+
+# Load 'sf' and 'mapview'
+# 'sf' is the modern standard for handling spatial vector data (shapefiles, etc.)
+# 'mapview' is used to create interactive Leaflet maps from sf objects
+load_packages("sf")
+load_packages("mapview")
+
+
+# 2. Define the Shapefile Path
+# IMPORTANT: This assumes 'grt_sites_COMPLETE_100_percent.shp' is in your current R working directory.
+# If it's located elsewhere, replace the filename below with the full path,
+# e.g., shp_file <- "C:/Users/YourName/Documents/gis_data/grt_sites_COMPLETE_100_percent.shp"
+shp_file <- "grt_sites_COMPLETE_100_percent.shp"
+
+
+# 3. Read the Shapefile
+# The st_read function automatically loads all necessary files (.shp, .dbf, .shx, etc.)
+# associated with the shapefile.
+if (file.exists(shp_file)) {
+  cat("Reading shapefile:", shp_file, "\n")
+  shp_data <- st_read(shp_file)
+  
+  # Optional: View the structure and coordinate reference system (CRS)
+  # print(head(shp_data))
+  # print(st_crs(shp_data))
+  
+  # 4. Create the INTERACTIVE Map using mapview
+  # mapview automatically handles the visualization of POINT geometry
+  # and includes zoom, panning, and basemap switching (OpenStreetMap is default).
+  # Hovering over a point will display its attributes.
+  p <- mapview(
+    shp_data, 
+    map.title = "Interactive Plot of GRT Sites (100% Complete)",
+    layer.name = "GRT Sites",
+    col.regions = "darkred", # Color of the points
+    cex = 6,                 # Size of the points (slightly larger for visibility)
+    alpha = 0.8              # Opacity
+  )
+  
+  # 5. Display the Plot
+  # If running in RStudio, this will open the map in the Viewer pane.
+  # If running in a script, it will open in your browser.
+  print(p)
+  
+} else {
+  # Handle the case where the file is not found
+  cat("ERROR: Shapefile not found at the specified path:\n")
+  cat(shp_file, "\n")
+  cat("Please ensure all shapefile components (.shp, .dbf, .shx, etc.) are in the directory \n")
+  cat("or update the 'shp_file' variable with the correct full path.\n")
+}
+
+# Further Customization Ideas for Mapview:
+# 1. To map a specific variable (e.g., column 'TYPE') to point color:
+#    p <- mapview(shp_data, zcol = "TYPE")
+# 2. To change the basemap (e.g., use ESRI World Imagery):
+#    p <- mapview(shp_data, map.title = "GRT Sites") + mapview(shp = NULL, map.types = "Esri.WorldImagery")
+# 3. To display the map without a specific variable:
+#    p <- mapview(shp_data, zcol = NULL)
+
+```
+
+```{r}
+# R Script to Read and Plot a Shapefile using sf and ggplot2
+
+# 1. Load Required Libraries
+# Function to check for and install/load packages
+load_packages <- function(pkg){
+  # Check if package is installed
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    cat(paste0("Package '", pkg, "' not found. Attempting to install...\n"))
+    # Install the package
+    install.packages(pkg, dependencies = TRUE)
+  }
+  # Load the package
+  library(pkg, character.only = TRUE)
+}
+
+# Load 'sf' and 'mapview'
+# 'sf' is the modern standard for handling spatial vector data (shapefiles, etc.)
+# 'mapview' is used to create interactive Leaflet maps from sf objects
+load_packages("sf")
+load_packages("mapview")
+
+
+# 2. Define the Shapefile Path
+# IMPORTANT: This assumes 'grt_sites_COMPLETE_100_percent.shp' is in your current R working directory.
+# If it's located elsewhere, replace the filename below with the full path,
+# e.g., shp_file <- "C:/Users/YourName/Documents/gis_data/grt_sites_COMPLETE_100_percent.shp"
+shp_file <- "grt_sites_COMPLETE_100_percent.shp"
+
+
+# 3. Read the Shapefile
+# The st_read function automatically loads all necessary files (.shp, .dbf, .shx, etc.)
+# associated with the shapefile.
+if (file.exists(shp_file)) {
+  cat("Reading shapefile:", shp_file, "\n")
+  shp_data <- st_read(shp_file)
+  
+  # Optional: View the structure and coordinate reference system (CRS)
+  # print(head(shp_data))
+  # print(st_crs(shp_data))
+  
+  # 4. Create the INTERACTIVE Map using mapview
+  # mapview automatically handles the visualization of POINT geometry
+  # and includes zoom, panning, and basemap switching (OpenStreetMap is default).
+  # Hovering over a point will display its attributes.
+  p <- mapview(
+    shp_data, 
+    map.title = "Interactive Plot of GRT Sites (100% Complete)",
+    map.types = "Esri.WorldImagery",
+    layer.name = "GRT Sites",
+    col.regions = "darkred", # Color of the points
+    cex = 6,                 # Size of the points (slightly larger for visibility)
+    alpha = 0.8              # Opacity
+  )
+  
+  # 5. Display the Plot
+  # If running in RStudio, this will open the map in the Viewer pane.
+  # If running in a script, it will open in your browser.
+  print(p)
+  
+} else {
+  # Handle the case where the file is not found
+  cat("ERROR: Shapefile not found at the specified path:\n")
+  cat(shp_file, "\n")
+  cat("Please ensure all shapefile components (.shp, .dbf, .shx, etc.) are in the directory \n")
+  cat("or update the 'shp_file' variable with the correct full path.\n")
+}
+
+# Further Customization Ideas for Mapview:
+# 1. To map a specific variable (e.g., column 'TYPE') to point color:
+#    p <- mapview(shp_data, zcol = "TYPE")
+# 2. To change the basemap (e.g., use ESRI World Imagery):
+#    p <- mapview(shp_data, map.title = "GRT Sites") + mapview(shp = NULL, map.types = "Esri.WorldImagery")
+# 3. To display the map without a specific variable:
+#    p <- mapview(shp_data, zcol = NULL)
+```
+
+```{r}
+load_packages("spdep")
+# Ensure 'sf' is loaded as well: library(sf)
+```
+
+```{r}
+# A. Extract Coordinates
+# spdep functions often require the coordinates directly, not the sf object.
+# We use the st_coordinates() function from the sf package.
+coords <- sf::st_coordinates(shp_data)
+
+# B. Define Neighbors using k-Nearest Neighbors (KNN)
+# Define k=4: Each site is connected to its 4 nearest neighbors.
+# KNN is good because it ensures every point has a neighbor, even in sparse areas.
+k_neighbors <- spdep::knearneigh(coords, k = 4)
+
+# C. Convert Neighbor Structure to a Neighbors List (nb)
+# The knearneigh object must be converted to a formal list of neighbors.
+nb_list <- spdep::knn2nb(k_neighbors)
+
+# Optional: Visualize the neighbor connections (requires the 'mapview' package)
+# mapview::mapview(shp_data) + spdep::spplot.nb(nb_list, coords)
+```
+
+```{r}
+# Create the weights object (listw) with row standardization
+# 'style="W"' performs row standardization: sum(w_ij) = 1 for all i
+spatial_weights_w <- spdep::nb2listw(nb_list, style = "W", zero.policy = TRUE)
+
+# Optional: View summary of the weights matrix
+summary(spatial_weights_w)
+```
+
+```{r}
+# Check if the column exists and its type
+print(names(shp_data))
+print(class(shp_data$n))
+```
+
+```{r}
+# 1. Clean and convert the column to numeric. 
+# We use suppressWarnings to handle any NA introduction gracefully.
+suppressWarnings({
+  shp_data$Residentil <- as.numeric(gsub(",", "", shp_data$Residentil))
+})
+
+# 2. Check how many values, if any, failed conversion (became NA)
+cat("Number of NA values after conversion:", sum(is.na(shp_data$Residentil)), "\n")
+```
+
+```{r}
+# Assuming shp_data has a numerical column named 'Value'
+# Calculate Moran's I statistic
+moran_test <- spdep::moran.test(
+  shp_data$Residentil, 
+  listw = spatial_weights_w,
+  zero.policy = TRUE
+)
+
+# Print the result
+print(moran_test)
+
+# Interpretation: 
+# - A positive Moran's I (and a small p-value) indicates **positive spatial autocorrelation** (high values cluster near high values).
+# - A negative Moran's I indicates **negative spatial autocorrelation** (high values cluster near low values).
+```
+
+```{r}
+
+```
